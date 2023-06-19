@@ -1,5 +1,3 @@
-from vpython import *
-
 # 변수 선언
 # 물리법칙 상수
 gravity = 9.8           # 중력가속도
@@ -66,6 +64,12 @@ Exit_text = label(text="Press 'q' key to Exit", pos=vector(15,-25,0), height=25,
 def score_update(score):        
     score_text.text = "Score: " + str(score)
 
+# 게임 종료 함수
+def game_over():
+    game_over_text.visible = True
+    Restart_text.visible = True
+    Exit_text.visible = True
+
 # 당구공 충돌 함수
 def ball_collision(b1, b2, e):
     x = b2.pos - b1.pos
@@ -105,7 +109,7 @@ def wall_collision(ball):
         return True
     else:
         return False
-
+        
 # 구역마다 다른 마찰계수로 인한 당구공의 속도 설정
 def ball_velocity(ball, mu, dt):
     ball.f = -mu * 1 * 9.8 * norm(ball.velocity)        # 마찰력 적용
@@ -114,6 +118,26 @@ def ball_velocity(ball, mu, dt):
     # 당구공의 속도가 0.01보다 작아지면 속도를 0으로 설정
     if mag(ball.velocity) < 0.01:
         ball.velocity = vector(0,0,0)
+
+# 게임 초기화 함수
+def reset_game():
+    global score, flag_W_to_O, flag_W_to_R, flag_O_to_R, flag_wall
+    print("게임을 Reset합니다!!")
+    game_over_text.visible = False
+    Restart_text.visible = False
+    Exit_text.visible = False
+    ball_white.pos = vector(7.5, 1 + ball_radius, -1.875)
+    ball_orange.pos = vector(7.5, 1 + ball_radius, 0)
+    ball_red.pos = vector(-7.5, 1 + ball_radius, 0)
+    ball_white.velocity = vector(0, -gravity, 0)
+    ball_orange.velocity = vector(0, -gravity, 0)
+    ball_red.velocity = vector(0, -gravity, 0)
+    flag_W_to_O = 0
+    flag_W_to_R = 0
+    flag_O_to_R = 0
+    flag_wall = 0
+    score = 0
+    score_update(score)
 
 # 게임 루프
 while playing:
@@ -140,7 +164,40 @@ while playing:
         flag_W_to_R += 1            # 수구와 2목적구의 충돌을 확인하기 위한 변수
     if ball_collision(ball_red, ball_orange, e):
         flag_O_to_R += 1            # 1목적구와 2목적구의 충돌을 확인하기 위한 변수
-
+        
+    # 점수 획득 조건
+    # 벽에 3번 부딪치고 수구가 1,2목적구를 맞추면 점수 획득
+    if flag_wall >= 3 and flag_W_to_O == 1 and flag_W_to_R == 1:
+        score += 1
+        print("득점!!")
+        flag_W_to_O = 2       # 득점 이후, 공이 멈추지 않고 또 다른 득점이 나오는 것을 방지
+        flag_W_to_R = 2
+        flag_O_to_R = 0
+        flag_wall = 0
+        score_update(score)
+    
+    # 예외 처리
+    # 수구가 1,2목적구를 먼저 맞추고 벽을 3번 부딪치는 경우를 제외 (점수X)
+    if flag_wall < 3 and flag_W_to_O == 1 and flag_W_to_R == 1:
+        flag_W_to_O = 0
+        flag_W_to_R = 0
+        flag_wall = 0
+    
+    # 모든 당구공이 속도가 0이면 flag값 초기화 및 마우스 클릭 입력
+    if mag(ball_white.velocity)==0:
+        if mag(ball_orange.velocity)==0:
+            if mag(ball_red.velocity)==0:
+                how_to_play.visible = True
+                mouse = scene.waitfor('mousedown')
+                if mouse.event == 'mousedown':
+                    how_to_play.visible = False
+                    print("수구의 속도는: ", mag(mouse.pos))
+                    ball_white.velocity = vector(mouse.pos.x, 0, mouse.pos.z)
+                flag_W_to_O = 0
+                flag_W_to_R = 0
+                flag_O_to_R = 0
+                flag_wall = 0
+                
     # 당구공의 속도 (각 영역에 따라 마찰력이 다르게 작용)
     if (-15 <= ball_white.pos.x and ball_white.pos.x < -5):
         ball_velocity(ball_white, 0, dt)
@@ -167,4 +224,21 @@ while playing:
     ball_white.pos += ball_white.velocity * dt
     ball_orange.pos += ball_orange.velocity * dt
     ball_red.pos += ball_red.velocity * dt 
+    
+    # 게임 종료 조건
+    if score == 3:
+        game_over()
+        
+        # 게임 종료 후 재시작 여부 확인
+        while True:
+            keyboard = scene.waitfor('click keydown')  # key 객체 생성
+            if keyboard.key == 'r':
+                reset_game()
+                break
+            elif keyboard.key == 'q':
+                print("게임 종료!!")
+                Restart_text.visible = False
+                Exit_text.visible = False
+                playing = False
+                break
         
