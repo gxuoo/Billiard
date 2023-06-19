@@ -90,6 +90,15 @@ def wall_collision(ball):
     else:
         return False
 
+# 구역마다 다른 마찰계수로 인한 당구공의 속도 설정
+def ball_velocity(ball, mu, dt):
+    ball.f = -mu * 1 * 9.8 * norm(ball.velocity)        # 마찰력 적용
+    ball.velocity = ball.velocity + ball.f * dt
+    
+    # 당구공의 속도가 0.01보다 작아지면 속도를 0으로 설정
+    if mag(ball.velocity) < 0.01:
+        ball.velocity = vector(0,0,0)
+
 # 게임 루프
 while playing:
     rate(100)
@@ -115,4 +124,31 @@ while playing:
         flag_W_to_R += 1            # 수구와 2목적구의 충돌을 확인하기 위한 변수
     if ball_collision(ball_red, ball_orange, e):
         flag_O_to_R += 1            # 1목적구와 2목적구의 충돌을 확인하기 위한 변수
+
+    # 당구공의 속도 (각 영역에 따라 마찰력이 다르게 작용)
+    if (-15 <= ball_white.pos.x and ball_white.pos.x < -5):
+        ball_velocity(ball_white, 0, dt)
+    elif (-5 <= ball_white.pos.x and ball_white.pos.x < 5):
+        ball_velocity(ball_white, mu, dt)
+    else:
+        ball_velocity(ball_white, mu*2, dt)
+    
+    if (-15 <= ball_orange.pos.x and ball_orange.pos.x < -5):
+        ball_velocity(ball_orange, 0, dt)
+    elif (-5 <= ball_orange.pos.x and ball_orange.pos.x < 5):
+        ball_velocity(ball_orange, mu, dt)
+    else:
+        ball_velocity(ball_orange, mu*2, dt)
+    
+    if (-15 <= ball_red.pos.x and ball_red.pos.x < -5):
+        ball_velocity(ball_red, 0, dt)
+    elif (-5 <= ball_red.pos.x and ball_red.pos.x < 5):
+        ball_velocity(ball_red, mu, dt)
+    else:
+        ball_velocity(ball_red, mu*2, dt)
+    
+    # 당구공 이동
+    ball_white.pos += ball_white.velocity * dt
+    ball_orange.pos += ball_orange.velocity * dt
+    ball_red.pos += ball_red.velocity * dt 
         
