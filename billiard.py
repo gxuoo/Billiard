@@ -50,6 +50,22 @@ ball_white.velocity = vec(0, -gravity, 0)
 ball_orange.velocity = vec(0, -gravity, 0)
 ball_red.velocity = vec(0, -gravity, 0)
 
+# 점수 UI 설정
+score = 0
+score_text = label(text="Score: " + str(score), pos=vector(0, 7, -10), height=25, box = False, opacity = 0)
+
+# 게임 플레이 UI 설정
+how_to_play = label(text="Click the mouse to move the white ball", pos=vector(0, 3, -10), height=20, color=color.yellow, box = False, opacity = 0)
+
+# 게임 종료, 재시작 UI 설정
+game_over_text = label(text="Game Over", pos=vector(0,0,0), height=50, color=color.red, visible=False, box = False, opacity = 0)
+Restart_text = label(text="Press 'r' key to Restart", pos=vector(-15,-25,0), height=25, color=color.red, visible=False, box = False, opacity = 0)
+Exit_text = label(text="Press 'q' key to Exit", pos=vector(15,-25,0), height=25, color=color.red, visible=False, box = False, opacity = 0)
+
+# UI 업데이트 함수 정의
+def score_update(score):        
+    score_text.text = "Score: " + str(score)
+
 # 당구공 충돌 함수
 def ball_collision(b1, b2, e):
     x = b2.pos - b1.pos
